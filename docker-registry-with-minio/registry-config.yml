@@ -1,0 +1,25 @@
+version: 0.1
+
+log:
+    accesslog:
+        disabled: true
+    formatter: text
+
+http:
+    addr: :5000
+
+storage:
+    cache:
+        layerinfo: inmemory
+    s3:
+        accesskey: minioaccesskey
+        secretkey: miniosecretkey
+        region: us-east-1
+        # FIXME see issue https://git.io/v7UO0
+        regionendpoint: http://192.168.1.243:9000/
+        bucket: docker-registry
+        encrypt: false
+        secure: false
+        v4auth: true
+        chunksize: 5242880
+        rootdirectory: /
