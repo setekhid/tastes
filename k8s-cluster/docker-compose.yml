@@ -1,0 +1,109 @@
+version: '2'
+services:
+
+    master-lb:
+        image: haproxy:1.7.5-alpine
+        restart: on-failure
+        ports:
+            - 8080:8080
+        volumes:
+            - ./:/usr/local/etc/haproxy:ro
+
+    etcd1:
+        image: quay.io/coreos/etcd:v3.1.7
+        restart: on-failure
+        environment:
+            ETCD_NAME: infra1
+            ETCD_INITIAL_ADVERTISE_PEER_URLS: http://etcd1:2380
+            ETCD_INITIAL_CLUSTER: infra3=http://etcd3:2380,infra1=http://etcd1:2380,infra2=http://etcd2:2380
+            ETCD_INITIAL_CLUSTER_STATE: new
+            ETCD_INITIAL_CLUSTER_TOKEN: etcd4kube
+            ETCD_LISTEN_CLIENT_URLS: http://etcd1:2379,http://localhost:2379
+            ETCD_LISTEN_PEER_URLS: http://etcd1:2380
+            ETCD_ADVERTISE_CLIENT_URLS: http://etcd1:2379
+
+    etcd2:
+        image: quay.io/coreos/etcd:v3.1.7
+        restart: on-failure
+        environment:
+            ETCD_NAME: infra2
+            ETCD_INITIAL_ADVERTISE_PEER_URLS: http://etcd2:2380
+            ETCD_INITIAL_CLUSTER: infra3=http://etcd3:2380,infra1=http://etcd1:2380,infra2=http://etcd2:2380
+            ETCD_INITIAL_CLUSTER_STATE: new
+            ETCD_INITIAL_CLUSTER_TOKEN: etcd4kube
+            ETCD_LISTEN_CLIENT_URLS: http://etcd2:2379,http://localhost:2379
+            ETCD_LISTEN_PEER_URLS: http://etcd2:2380
+            ETCD_ADVERTISE_CLIENT_URLS: http://etcd2:2379
+
+    etcd3:
+        image: quay.io/coreos/etcd:v3.1.7
+        restart: on-failure
+        environment:
+            ETCD_NAME: infra3
+            ETCD_INITIAL_ADVERTISE_PEER_URLS: http://etcd3:2380
+            ETCD_INITIAL_CLUSTER: infra3=http://etcd3:2380,infra1=http://etcd1:2380,infra2=http://etcd2:2380
+            ETCD_INITIAL_CLUSTER_STATE: new
+            ETCD_INITIAL_CLUSTER_TOKEN: etcd4kube
+            ETCD_LISTEN_CLIENT_URLS: http://etcd3:2379,http://localhost:2379
+            ETCD_LISTEN_PEER_URLS: http://etcd3:2380
+            ETCD_ADVERTISE_CLIENT_URLS: http://etcd3:2379
+
+    kube-apiserver1:
+        image: gcr.io/google_containers/hyperkube:v1.6.3
+        restart: on-failure
+        command:
+            - /apiserver
+            - --logtostderr=true
+            - --v=0
+            - --allow-privileged=false
+            - --etcd-servers=http://etcd1:2379,http://etcd2:2379,http://etcd3:2379
+            - --insecure-bind-address=0.0.0.0
+            - --insecure-port=8080
+            - --service-cluster-ip-range=10.254.0.0/16
+            - --admission-control=NamespaceLifecycle,NamespaceExists,LimitRanger,SecurityContextDeny,ServiceAccount,ResourceQuota
+
+    kube-apiserver2:
+        image: gcr.io/google_containers/hyperkube:v1.6.3
+        restart: on-failure
+        command:
+            - /apiserver
+            - --logtostderr=true
+            - --v=0
+            - --allow-privileged=false
+            - --etcd-servers=http://etcd1:2379,http://etcd2:2379,http://etcd3:2379
+            - --insecure-bind-address=0.0.0.0
+            - --insecure-port=8080
+            - --service-cluster-ip-range=10.254.0.0/16
+            - --admission-control=NamespaceLifecycle,NamespaceExists,LimitRanger,SecurityContextDeny,ServiceAccount,ResourceQuota
+
+    kube-apiserver3:
+        image: gcr.io/google_containers/hyperkube:v1.6.3
+        restart: on-failure
+        command:
+            - /apiserver
+            - --logtostderr=true
+            - --v=0
+            - --allow-privileged=false
+            - --etcd-servers=http://etcd1:2379,http://etcd2:2379,http://etcd3:2379
+            - --insecure-bind-address=0.0.0.0
+            - --insecure-port=8080
+            - --service-cluster-ip-range=10.254.0.0/16
+            - --admission-control=NamespaceLifecycle,NamespaceExists,LimitRanger,SecurityContextDeny,ServiceAccount,ResourceQuota
+
+    kube-controller-manager:
+        image: gcr.io/google_containers/hyperkube:v1.6.3
+        restart: on-failure
+        command:
+            - /controller-manager
+            - --logtostderr=true
+            - --v=0
+            - --master=http://master-lb:8080
+
+    kube-scheduler:
+        image: gcr.io/google_containers/hyperkube:v1.6.3
+        restart: on-failure
+        command:
+            - /scheduler
+            - --logtostderr=true
+            - --v=0
+            - --master=http://master-lb:8080
