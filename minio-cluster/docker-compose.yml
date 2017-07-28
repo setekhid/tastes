@@ -1,10 +1,16 @@
 version: '3'
 services:
 
-    minio0:
-        image: minio/minio:RELEASE.2017-06-13T19-01-01Z
+    minio-lb:
+        image: haproxy:1.7.5-alpine
+        restart: on-failure
         ports:
             - 9000:9000
+        volumes:
+            - ./:/usr/local/etc/haproxy:ro
+
+    minio0:
+        image: minio/minio:RELEASE.2017-06-13T19-01-01Z
         volumes:
             - ./minio0-volume:/export0
             - ./minio6-volume:/export1
@@ -29,8 +35,6 @@ services:
 
     minio1:
         image: minio/minio:RELEASE.2017-06-13T19-01-01Z
-        ports:
-            - 9001:9000
         environment:
             MINIO_ACCESS_KEY: minio
             MINIO_SECRET_KEY: minio123
