@@ -1,0 +1,19 @@
+version: '3'
+services:
+
+  my-nginx-server:
+    image: nginx
+    ports:
+      - "80:80"
+    volumes:
+      - my-minfs-store:/usr/share/nginx/html
+
+volumes:
+  my-minfs-store:
+    driver: minio/minfs:latest
+    driver_opts:
+      endpoint: http://localhost:9000
+      access-key: minio
+      secret-key: minio123
+      bucket: bucket-minfs
+      # opts: "uid=1000,gid=1000"
