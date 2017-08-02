@@ -1,0 +1,23 @@
+---
+version: '3'
+services:
+    
+    gfs01:
+        image: gluster/gluster-centos:gluster3u9_centos7
+        restart: always
+        hostname: gfs01
+        volumes:
+            - ./gfs01/etc/glusterfs:/etc/glusterfs
+            - ./gfs01/var/log/glusterfs:/var/log/glusterfs
+            - ./gfs01/var/lib/glusterd:/var/lib/glusterd
+        privileged: true
+    
+    gfs02:
+        image: gluster/gluster-centos:gluster3u9_centos7
+        restart: always
+        hostname: gfs02
+        volumes:
+            - ./gfs02/etc/glusterfs:/etc/glusterfs
+            - ./gfs02/var/log/glusterfs:/var/log/glusterfs
+            - ./gfs02/var/lib/glusterd:/var/lib/glusterd
+        privileged: true

@@ -1,0 +1,7 @@
+---
+- name: gfs install
+  hosts: all
+  become: yes
+  become_user: root
+
+  tasks:
