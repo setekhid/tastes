@@ -1,0 +1,49 @@
+version: '3'
+services:
+
+    es1:
+        # default http_auth: elastic:changeme
+        image: docker.elastic.co/elasticsearch/elasticsearch:5.5.1
+        environment:
+            cluster.name: docker-es-cluster
+            node.name: docker-es1
+            network.host: 0.0.0.0
+            path.data: /es_volume/data
+            path.logs: /es_volume/log
+            bootstrap.memory_lock: 'true'
+            discovery.zen.minimum_master_nodes: 1
+            ES_JAVA_OPTS: -Xms512m -Xmx512m
+        ulimits:
+            memlock:
+                soft: -1
+                hard: -1
+        # mem_limit: 1g
+        volumes:
+            - ./es1_volume:/es_volume
+        ports:
+            - 9201:9200
+
+    es2:
+        # default http_auth: elastic:changeme
+        image: docker.elastic.co/elasticsearch/elasticsearch:5.5.1
+        environment:
+            cluster.name: docker-es-cluster
+            node.name: docker-es2
+            network.host: 0.0.0.0
+            path.data: /es_volume/data
+            path.logs: /es_volume/log
+            bootstrap.memory_lock: 'true'
+            discovery.zen.minimum_master_nodes: 1
+            discovery.zen.ping.unicast.hosts: es1
+            ES_JAVA_OPTS: -Xms512m -Xmx512m
+        links:
+            - es1
+        ulimits:
+            memlock:
+                soft: -1
+                hard: -1
+        # mem_limit: 1g
+        volumes:
+            - ./es2_volume:/es_volume
+        ports:
+            - 9202:9200
