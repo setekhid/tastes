@@ -1,0 +1,30 @@
+version: '3'
+services:
+
+    cassandra:
+        image: cassandra:2.2
+        ports:
+            - 9042:9042
+
+    kong:
+        image: kong:0.10
+        restart: always
+        links:
+            - cassandra
+        ports:
+            - 8000:8000
+            - 8443:8443
+            - 8001:8001
+        environment:
+            KONG_DATABASE: cassandra
+            KONG_CASSANDRA_CONTACT_POINTS: cassandra
+
+    redis:
+        image: redis:3.2-alpine
+
+    mockbin:
+        image: mashape/mockbin:latest
+        links:
+            - redis
+        ports:
+            - 8080:8080
