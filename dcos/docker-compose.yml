@@ -1,0 +1,71 @@
+version: '3'
+services:
+
+    zk:
+        image: zookeeper:3.4
+        restart: always
+        ports:
+            - 2181:2181
+
+    mesos-master:
+        image: mesosphere/mesos-master:1.3.0
+        links:
+            - zk
+        environment:
+            MESOS_ZK: zk://zk:2181/mesos
+            MESOS_QUORUM: 1
+            MESOS_CLUSTER: docker-compose
+        ports:
+            - 5050:5050
+
+    marathon:
+        image: mesosphere/marathon:v1.4.5
+        links:
+            - zk
+        environment:
+            MARATHON_MASTER: zk://zk:2181/mesos
+            MARATHON_ZK: zk://zk:2181/marathon
+            MARATHON_MESOS_ROLE: slave_public
+        ports:
+            - 8080:8080
+
+    mesos-slave:
+        image: mesosphere/mesos-slave:1.3.0
+        links:
+            - zk
+            - mesos-dind
+        privileged: true
+        environment:
+            MESOS_MASTER: zk://zk:2181/mesos
+            MESOS_CONTAINERIZERS: mesos
+            MESOS_WORK_DIR: /var/lib/mesos
+            MESOS_RESOURCES: cpus:0.5;mem:256;disk:1024
+            # below doesn't work with mesos-slave, the docker container doesn't
+            # support for now. see issue https://goo.gl/pMryRo
+            DOCKER_HOST: tcp://mesos-dind:2375
+
+    mesos-dind:
+        image: docker:17.05-dind
+        restart: always
+        privileged: true
+        command: ["--storage-driver=overlay"]
+
+    mesos-slave-public:
+        image: mesosphere/mesos-slave:1.3.0
+        links:
+            - zk
+            - mesos-dind-public
+        privileged: true
+        environment:
+            MESOS_MASTER: zk://zk:2181/mesos
+            MESOS_CONTAINERIZERS: mesos
+            MESOS_WORK_DIR: /var/lib/mesos
+            MESOS_RESOURCES: cpus:0.5;mem:256;disk:1024
+            MESOS_DEFAULT_ROLE: slave_public
+            DOCKER_HOST: tcp://mesos-dind-public:2375
+
+    mesos-dind-public:
+        image: docker:17.05-dind
+        restart: always
+        privileged: true
+        command: ["--storage-driver=overlay"]
