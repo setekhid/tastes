@@ -1,0 +1,5 @@
+[package]
+
+name = "cubespin"
+version = "0.1.0"
+authors = [ "Huitse Tai <geb.1989@gmail.com>" ]
